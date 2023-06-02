@@ -43,12 +43,14 @@ interface Props extends TextInputProps {
   mentionStyle: TextStyle;
   suggestedUsersComponent: any;
   users: SuggestionUser[];
+  renderFormatted?: boolean;
 }
 
 export const MentionsInput = React.forwardRef(
   (
     {
       value,
+      renderFormatted,
       suggestedUsersComponent,
       textInputStyle,
       onFocusStateChange = () => {},
@@ -384,10 +386,17 @@ export const MentionsInput = React.forwardRef(
                 onSelectionChange={onSelectionChange}
                 //@ts-ignore
                 ref={ref}
+                value={
+                  renderFormatted
+                    ? undefined
+                    : decodeURI(value.replace(/%/g, encodeURI('%')))
+                }
               >
-                <Text style={textInputTextStyle}>
-                  {parseMarkdown(generateMarkdown(value), mentionStyle)}
-                </Text>
+                {renderFormatted && (
+                  <Text style={textInputTextStyle}>
+                    {parseMarkdown(generateMarkdown(value), mentionStyle)}
+                  </Text>
+                )}
               </TextInput>
               <View style={styles.innerContainer}>{innerComponent}</View>
             </View>
