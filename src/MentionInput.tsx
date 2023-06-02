@@ -20,7 +20,7 @@ export type SuggestionUser = {
   id: string;
   name: string;
   avatar: string;
-  username?: string;
+  username: string;
 };
 
 type SuggestedUser = SuggestionUser & {
@@ -71,7 +71,6 @@ export const MentionsInput = React.forwardRef(
     const [matches, SetMatches] = useState<any[]>([]);
     const [mentions, SetMentions] = useState<any[]>([]);
     const [currentCursorPosition, SetCurrentCursorPosition] = useState(0);
-    const [currentMarkdown, setCurrentMarkdown] = useState<string>('');
 
     useEffect(() => {
       if (props.value === '' && (mentions.length > 0 || matches.length > 0)) {
@@ -118,11 +117,13 @@ export const MentionsInput = React.forwardRef(
           ) {
             shouldPresentSuggestions = true;
             newSuggestedUsers = newSuggestedUsers
-              .filter((user) =>
-                user.name
-                  .toLowerCase()
-                  .includes(match[0].substring(1).toLowerCase())
-              )
+              .filter((user) => {
+                const matchString = match[0].substring(1).toLowerCase();
+                return (
+                  user.name.toLowerCase().includes(matchString) ||
+                  user.username.toLowerCase().includes(matchString)
+                );
+              })
               .map((user) => {
                 user.startPosition = matchStartPosition;
                 return user;
@@ -134,7 +135,7 @@ export const MentionsInput = React.forwardRef(
           suggestedUsers.every(
             (value, index) =>
               value.id === newSuggestedUsers[index].id &&
-              value.startPosition == newSuggestedUsers[index].startPosition
+              value.startPosition === newSuggestedUsers[index].startPosition
           );
 
         SetIsOpen(shouldPresentSuggestions);
@@ -146,7 +147,7 @@ export const MentionsInput = React.forwardRef(
       [users, suggestedUsers]
     );
 
-    const formatMarkdown = useCallback(
+    const generateMarkdown = useCallback(
       (markdown: string) => {
         let parseHeadIndex = 0;
         let markdownArray = [];
@@ -199,10 +200,16 @@ export const MentionsInput = React.forwardRef(
             markdown = markdown + m.data;
           }
         });
-        setCurrentMarkdown(markdown);
-        onMarkdownChange(markdown);
+        return markdown;
       },
-      [onMarkdownChange, mentions, matches]
+      [mentions, matches]
+    );
+
+    const formatMarkdown = useCallback(
+      (markdown: string) => {
+        onMarkdownChange(generateMarkdown(markdown));
+      },
+      [onMarkdownChange, generateMarkdown]
     );
 
     const handleDelete = useCallback(
@@ -302,7 +309,7 @@ export const MentionsInput = React.forwardRef(
 
         const match = matches.find((m) => m.index === startPosition);
         let newMentions = mentions;
-        const userName = user.username ?? transformTag(user.name);
+        const userName = transformTag(user.username);
         const newText =
           props.value.substring(0, match.index) +
           `@${userName} ` +
@@ -314,7 +321,6 @@ export const MentionsInput = React.forwardRef(
         newMentions.push({
           user: {
             ...user,
-            name: userName,
             startPosition: startPosition,
             test: 1000,
           },
@@ -329,7 +335,7 @@ export const MentionsInput = React.forwardRef(
 
         SetMentions(newMentions);
         SetIsOpen(false);
-        const newCursor = match.index + user.name.length + 1;
+        const newCursor = match.index + user.username.length + 1;
         SetCurrentCursorPosition(newCursor);
         setTimeout(() => {
           handleMentions(newText, newCursor);
@@ -385,7 +391,7 @@ export const MentionsInput = React.forwardRef(
                 ref={ref}
               >
                 <Text style={textInputTextStyle}>
-                  {parseMarkdown(currentMarkdown, mentionStyle)}
+                  {parseMarkdown(generateMarkdown(props.value), mentionStyle)}
                 </Text>
               </TextInput>
               <View style={styles.innerContainer}>{innerComponent}</View>

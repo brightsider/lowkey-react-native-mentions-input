@@ -36,18 +36,21 @@ export default function App() {
           {
             id: '5f5f2b120a958f2e6b2ff0d1',
             name: 'The Maximus The Bestus',
+            username: 'themaximus',
             avatar:
               'https://images.pexels.com/photos/1561020/pexels-photo-1561020.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=50',
           },
           {
             id: '5f5f2b120a958f2e6b2ff0d1',
             name: 'Joni T',
+            username: 'joni.t',
             avatar:
               'https://images.pexels.com/photos/917494/pexels-photo-917494.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=50',
           },
           {
             id: '5f5f2b120a958f2e6b2ff0d1',
             name: 'ville',
+            username: 'ville',
             avatar:
               'https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=50',
           },
