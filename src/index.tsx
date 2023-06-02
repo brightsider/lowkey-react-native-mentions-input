@@ -1,2 +1,2 @@
-export { MentionsInput } from './MentionInput';
+export { MentionsInput, SuggestionUser } from './MentionInput';
 export { parseMarkdown } from './utils';
