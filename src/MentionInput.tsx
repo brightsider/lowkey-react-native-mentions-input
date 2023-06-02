@@ -48,6 +48,7 @@ interface Props extends TextInputProps {
 export const MentionsInput = React.forwardRef(
   (
     {
+      value,
       suggestedUsersComponent,
       textInputStyle,
       onFocusStateChange = () => {},
@@ -73,12 +74,12 @@ export const MentionsInput = React.forwardRef(
     const [currentCursorPosition, SetCurrentCursorPosition] = useState(0);
 
     useEffect(() => {
-      if (props.value === '' && (mentions.length > 0 || matches.length > 0)) {
+      if (value === '' && (mentions.length > 0 || matches.length > 0)) {
         SetMatches([]);
         SetMentions([]);
         SetCurrentCursorPosition(1);
       }
-    }, [matches, mentions, props.value]);
+    }, [matches, mentions, value]);
 
     const transformTag = useCallback((value: string) => {
       return value
@@ -254,21 +255,19 @@ export const MentionsInput = React.forwardRef(
         newMentions.map((mention) => {
           const matchStartPosition = mention.user.startPosition;
 
-          if (decodeURI(newText).length - decodeURI(props.value).length > 0) {
+          if (decodeURI(newText).length - decodeURI(value).length > 0) {
             if (
-              matchStartPosition + (newText.length - props.value.length) >
+              matchStartPosition + (newText.length - value.length) >
                 currentCursorPosition &&
-              currentCursorPosition !== props.value.length
+              currentCursorPosition !== value.length
             ) {
               mention.user.startPosition =
-                mention.user.startPosition +
-                (newText.length - props.value.length);
+                mention.user.startPosition + (newText.length - value.length);
             }
           } else {
             if (matchStartPosition >= currentCursorPosition) {
               mention.user.startPosition =
-                mention.user.startPosition +
-                (newText.length - props.value.length);
+                mention.user.startPosition + (newText.length - value.length);
             }
           }
           return mention;
@@ -287,7 +286,7 @@ export const MentionsInput = React.forwardRef(
           SetMatches(newMatches);
         }
       },
-      [mentions, onTextChange, formatMarkdown, props.value, matches]
+      [mentions, onTextChange, formatMarkdown, value, matches]
     );
 
     const onChangeText = useCallback(
@@ -311,12 +310,9 @@ export const MentionsInput = React.forwardRef(
         let newMentions = mentions;
         const userName = transformTag(user.username);
         const newText =
-          props.value.substring(0, match.index) +
+          value.substring(0, match.index) +
           `@${userName} ` +
-          props.value.substring(
-            match.index + match[0].length,
-            props.value.length
-          );
+          value.substring(match.index + match[0].length, value.length);
 
         newMentions.push({
           user: {
@@ -341,7 +337,7 @@ export const MentionsInput = React.forwardRef(
           handleMentions(newText, newCursor);
         }, 100);
       },
-      [mentions, matches, transformTag, props.value, handleMentions]
+      [mentions, matches, transformTag, value, handleMentions]
     );
 
     const onFocus = useCallback(() => {
@@ -353,8 +349,8 @@ export const MentionsInput = React.forwardRef(
     }, [onFocusStateChange]);
 
     useEffect(() => {
-      formatMarkdown(props.value);
-    }, [props.value, formatMarkdown]);
+      formatMarkdown(value);
+    }, [value, formatMarkdown]);
 
     useEffect(() => {
       let timeout = setTimeout(() => {
@@ -378,7 +374,6 @@ export const MentionsInput = React.forwardRef(
                 placeholder={placeholder}
                 placeholderTextColor={placeholderTextColor}
                 multiline={multiline}
-                value={decodeURI(props.value.replace(/%/g, encodeURI('%')))}
                 onChangeText={onChangeText}
                 onKeyPress={handleDelete}
                 style={[
@@ -391,7 +386,7 @@ export const MentionsInput = React.forwardRef(
                 ref={ref}
               >
                 <Text style={textInputTextStyle}>
-                  {parseMarkdown(generateMarkdown(props.value), mentionStyle)}
+                  {parseMarkdown(generateMarkdown(value), mentionStyle)}
                 </Text>
               </TextInput>
               <View style={styles.innerContainer}>{innerComponent}</View>
