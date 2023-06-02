@@ -7,12 +7,25 @@ import {
   TextInputProps,
   TextInputSelectionChangeEventData,
   TextStyle,
+  Text,
   View,
   ViewStyle,
 } from 'react-native';
 
 import matchAll from 'string.prototype.matchall';
 import { PATTERNS } from './constants';
+import { parseMarkdown } from './utils';
+
+export type SuggestionUser = {
+  id: string;
+  name: string;
+  avatar: string;
+  username?: string;
+};
+
+type SuggestedUser = SuggestionUser & {
+  startPosition: number;
+};
 
 interface Props extends TextInputProps {
   value: string;
@@ -29,19 +42,8 @@ interface Props extends TextInputProps {
   textInputTextStyle: TextStyle;
   mentionStyle: TextStyle;
   suggestedUsersComponent: any;
-  users: {
-    id: string;
-    name: string;
-    avatar: string;
-  }[];
+  users: SuggestionUser[];
 }
-
-type SuggestedUsers = {
-  id: string;
-  name: string;
-  avatar: string;
-  startPosition: number;
-};
 
 export const MentionsInput = React.forwardRef(
   (
@@ -59,15 +61,17 @@ export const MentionsInput = React.forwardRef(
       rightComponent = <></>,
       innerComponent = <></>,
       users,
+      mentionStyle,
       ...props
     }: Props,
     ref
   ) => {
     const [isOpen, SetIsOpen] = useState(false);
-    const [suggestedUsers, SetSuggesedUsers] = useState<SuggestedUsers[]>([]);
+    const [suggestedUsers, SetSuggesedUsers] = useState<SuggestedUser[]>([]);
     const [matches, SetMatches] = useState<any[]>([]);
     const [mentions, SetMentions] = useState<any[]>([]);
     const [currentCursorPosition, SetCurrentCursorPosition] = useState(0);
+    const [currentMarkdown, setCurrentMarkdown] = useState<string>('');
 
     useEffect(() => {
       if (props.value === '' && (mentions.length > 0 || matches.length > 0)) {
@@ -88,7 +92,7 @@ export const MentionsInput = React.forwardRef(
     const handleSuggestionsOpen = useCallback(
       (values: RegExpMatchArray[], currentCursorPosition: number) => {
         let shouldPresentSuggestions = false;
-        let newSuggestedUsers: Array<SuggestedUsers> = [];
+        let newSuggestedUsers: Array<SuggestedUser> = [];
 
         users.map(
           (user, index) =>
@@ -195,6 +199,7 @@ export const MentionsInput = React.forwardRef(
             markdown = markdown + m.data;
           }
         });
+        setCurrentMarkdown(markdown);
         onMarkdownChange(markdown);
       },
       [onMarkdownChange, mentions, matches]
@@ -286,12 +291,7 @@ export const MentionsInput = React.forwardRef(
     );
 
     const handleAddMentions = useCallback(
-      (user: {
-        id: number;
-        name: string;
-        avatar: string;
-        startPosition: number;
-      }) => {
+      (user: SuggestedUser) => {
         const startPosition = user.startPosition;
         const mention = mentions.find(
           (m) => m.user.startPosition === startPosition
@@ -302,7 +302,7 @@ export const MentionsInput = React.forwardRef(
 
         const match = matches.find((m) => m.index === startPosition);
         let newMentions = mentions;
-        const userName = transformTag(user.name);
+        const userName = user.username ?? transformTag(user.name);
         const newText =
           props.value.substring(0, match.index) +
           `@${userName} ` +
@@ -372,7 +372,7 @@ export const MentionsInput = React.forwardRef(
                 placeholder={placeholder}
                 placeholderTextColor={placeholderTextColor}
                 multiline={multiline}
-                value={decodeURI(props.value.replace(/%/g, encodeURI('%')))}
+                // value={decodeURI(props.value.replace(/%/g, encodeURI('%')))}
                 onChangeText={onChangeText}
                 onKeyPress={handleDelete}
                 style={[
@@ -383,7 +383,11 @@ export const MentionsInput = React.forwardRef(
                 onSelectionChange={onSelectionChange}
                 //@ts-ignore
                 ref={ref}
-              />
+              >
+                <Text style={textInputTextStyle}>
+                  {parseMarkdown(currentMarkdown, mentionStyle)}
+                </Text>
+              </TextInput>
               <View style={styles.innerContainer}>{innerComponent}</View>
             </View>
             {rightComponent}
